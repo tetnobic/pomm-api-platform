@@ -47,7 +47,7 @@ final class WriteListener
                 break;
 
             case Request::METHOD_PUT:
-                $fields = array_keys($entity->fields());
+                $fields = array_intersect($model->getStructure()->getFieldNames(), array_keys($entity->fields()));
                 $model->updateOne($entity, $fields);
                 $action_handled = true;
                 break;
