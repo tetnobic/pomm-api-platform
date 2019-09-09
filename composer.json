@@ -9,10 +9,16 @@
             "email": "sanpi@homecomputing.fr"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/tetnobic/pomm-bundle"
+        }
+    ],
     "require": {
         "php": ">=7.0",
         "api-platform/core": "~2.0",
-        "pomm-project/pomm-bundle": "~2.4"
+        "pomm-project/pomm-bundle": "dev-master",
     },
     "autoload": {
         "psr-4": { "PommProject\\ApiPlatform\\": "src/" }
