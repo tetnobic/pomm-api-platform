@@ -16,12 +16,14 @@ use ApiPlatform\Core\DataProvider\CollectionDataProviderInterface;
 use ApiPlatform\Core\Exception\ResourceClassNotSupportedException;
 use ApiPlatform\Core\Metadata\Resource\Factory\ResourceMetadataFactoryInterface;
 use PommProject\ApiPlatform\Filter\FilterInterface;
+use PommProject\ApiPlatform\Annotation\PommSession;
 use PommProject\Foundation\Pomm;
 use PommProject\Foundation\Where;
 use PommProject\ModelManager\Model\Model;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Doctrine\Common\Annotations\Reader;
 
 class CollectionDataProvider implements CollectionDataProviderInterface
 {
@@ -34,6 +36,7 @@ class CollectionDataProvider implements CollectionDataProviderInterface
     private $pagination;
     private $order;
     private $resourceMetadataFactory;
+    private $annotationReader;
 
     public function __construct(
         Pomm $pomm,
@@ -41,7 +44,8 @@ class CollectionDataProvider implements CollectionDataProviderInterface
         ResourceMetadataFactoryInterface $resourceMetadataFactory,
         ContainerInterface $filterLocator,
         array $pagination,
-        array $order
+        array $order,
+        Reader $annotationReader
     ) {
         $this->pomm = $pomm;
         $this->requestStack = $requestStack;
@@ -49,6 +53,7 @@ class CollectionDataProvider implements CollectionDataProviderInterface
         $this->order = $order;
         $this->resourceMetadataFactory = $resourceMetadataFactory;
         $this->setFilterLocator($filterLocator);
+        $this->annotationReader = $annotationReader;
     }
 
     /**
@@ -66,7 +71,13 @@ class CollectionDataProvider implements CollectionDataProviderInterface
             throw new ResourceClassNotSupportedException();
         }
 
-        $session = $this->pomm->getDefaultSession();
+        $annotationPommSession = $this->annotationReader->getClassAnnotation(new \ReflectionClass($request->attributes->get('_api_resource_class')), PommSession::class);
+        if ($annotationPommSession) {
+            $session = $this->pomm->getSession($annotationPommSession->name);
+        } else {
+            $session = $this->pomm->getDefaultSession();
+        }
+
         $model = $session->getModel($modelName);
         $paginator = $model->paginateFindWhere(
             $this->getWhere($request, $model, $resourceClass),
